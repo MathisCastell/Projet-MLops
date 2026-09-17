@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import mlflow.sklearn
 import pandas as pd
@@ -8,7 +9,7 @@ from src.config import Config
 
 def main(config_path: str, input_csv: str, output_csv: str) -> None:
     cfg = Config.from_yaml(config_path)
-    mlflow.set_tracking_uri(cfg.mlflow.tracking_uri)
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", cfg.mlflow.tracking_uri))
 
     model_uri = f"models:/{cfg.model.registry_name}@{cfg.model.alias}"
     model = mlflow.sklearn.load_model(model_uri)

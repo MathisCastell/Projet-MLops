@@ -36,11 +36,22 @@ build_docker:
 	docker build -t $(IMAGE_NAME):latest .
 
 run_docker:
-	docker run -p 8000:8000 $(IMAGE_NAME):latest
+	docker run -p 8000:8000 -e MLFLOW_TRACKING_URI=$(or $(MLFLOW_TRACKING_URI),http://host.docker.internal:5000) $(IMAGE_NAME):latest
+
+compose_up:
+	docker compose up -d --build
+
+compose_train:
+	docker compose run --rm api $(PY) -m src.get_data --config $(CONFIG)
+	docker compose run --rm api $(PY) -m src.preprocess --config $(CONFIG)
+	docker compose run --rm api $(PY) -m src.train --config $(CONFIG)
+
+compose_down:
+	docker compose down
 
 clean:
 	rm -rf data/raw.csv data/train.csv data/test.csv reports mlruns mlflow.db
 
 all: init get-data preprocess train evaluate test
 
-.PHONY: init get-data preprocess train evaluate test lint mlflow-ui run_api run_app build_docker run_docker clean all
+.PHONY: init get-data preprocess train evaluate test lint mlflow-ui run_api run_app build_docker run_docker compose_up compose_train compose_down clean all

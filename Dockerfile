@@ -7,8 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY configs/ ./configs/
 COPY src/ ./src/
-COPY mlflow.db .
-COPY mlruns/ ./mlruns/
+COPY app/ ./app/
 
 EXPOSE 8000
 

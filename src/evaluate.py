@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 from pathlib import Path
 
 import mlflow
@@ -20,7 +21,7 @@ from src.utils import save_confusion_matrix, save_pr_curve, save_roc_curve
 def main(config_path: str) -> None:
     cfg = Config.from_yaml(config_path)
 
-    mlflow.set_tracking_uri(cfg.mlflow.tracking_uri)
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", cfg.mlflow.tracking_uri))
     mlflow.set_experiment(cfg.mlflow.experiment_name)
 
     model_uri = f"models:/{cfg.model.registry_name}@{cfg.model.alias}"

@@ -28,9 +28,10 @@ Projet/
 ├── .github/workflows/ci.yml # lint (ruff) + tests à chaque push/PR
 ├── data/                   # généré (gitignoré)
 ├── reports/                # généré (gitignoré) : plots + métriques d'évaluation
-├── mlruns/, mlflow.db      # généré (gitignoré) : tracking store MLflow local
+├── mlruns/, mlflow.db      # généré (gitignoré) : tracking store MLflow local (exécution hors Docker)
 ├── Makefile
 ├── Dockerfile
+├── docker-compose.yml      # services mlflow (serveur) + api + app, conteneurisation complète
 ├── requirements.txt
 ├── .env.example
 └── README.md
@@ -116,13 +117,49 @@ le modèle lui-même.
 
 ## Docker
 
+### Stack complète (recommandé) : MLflow + API + Streamlit conteneurisés
+
+```bash
+docker compose up -d --build mlflow
+docker compose run --rm api python -m src.get_data --config configs/config.yaml
+docker compose run --rm api python -m src.preprocess --config configs/config.yaml
+docker compose run --rm api python -m src.train --config configs/config.yaml
+docker compose up -d api app
+```
+
+ou, une fois le modèle déjà entraîné dans le volume `mlflow_data` :
+
+```bash
+make compose_up
+```
+
+- `mlflow` sert le tracking store (SQLite) et l'artifact store en HTTP (`--serve-artifacts`), ce
+  qui permet aux autres conteneurs de charger le modèle registry sans partager le système de
+  fichiers de l'hôte.
+- `api` et `app` pointent vers `MLFLOW_TRACKING_URI=http://mlflow:5000` et `API_URL=http://api:8000`
+  respectivement (résolution DNS interne à Docker Compose).
+- Les données (`data/`) persistent entre les commandes `docker compose run` via le volume nommé
+  `project_data` ; le tracking store et les artefacts persistent via `mlflow_data`.
+
+Accès : API sur http://localhost:8000, Streamlit sur http://localhost:8501, MLflow UI sur
+http://localhost:5000.
+
+Pour tout arrêter : `docker compose down` (ajouter `-v` pour aussi supprimer les volumes et
+repartir de zéro).
+
+### Image API seule (sans MLflow conteneurisé)
+
 ```bash
 make build_docker
 make run_docker
 ```
 
-L'image embarque les `mlruns/` et `mlflow.db` générés localement : `make train` doit donc avoir été
-exécuté au moins une fois avant `docker build` pour que le modèle enregistré existe.
+Dans ce mode, l'image ne contient pas de modèle : elle a besoin d'un serveur MLflow joignable via
+`MLFLOW_TRACKING_URI` (par défaut `http://host.docker.internal:5000`, en supposant un `mlflow
+server` lancé sur l'hôte). Le stockage local (`mlruns/`/`mlflow.db`, sans serveur HTTP) n'est pas
+portable dans un conteneur, car MLflow y enregistre des chemins de fichiers absolus propres à la
+machine où l'entraînement a eu lieu — d'où l'intérêt de la stack `docker-compose` ci-dessus pour un
+déploiement conteneurisé réellement autonome.
 
 ## Dépannage
 

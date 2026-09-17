@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import mlflow
 import mlflow.sklearn
@@ -15,7 +16,8 @@ def main(config_path: str) -> None:
     cfg = Config.from_yaml(config_path)
     set_seed(cfg.data.seed)
 
-    mlflow.set_tracking_uri(cfg.mlflow.tracking_uri)
+    tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", cfg.mlflow.tracking_uri)
+    mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(cfg.mlflow.experiment_name)
     mlflow.sklearn.autolog(log_input_examples=True, log_model_signatures=True)
 

@@ -1,3 +1,5 @@
+import os
+
 import mlflow.sklearn
 import pandas as pd
 from fastapi import FastAPI
@@ -5,7 +7,7 @@ from fastapi import FastAPI
 from src.config import Config
 
 cfg = Config.from_yaml("configs/config.yaml")
-mlflow.set_tracking_uri(cfg.mlflow.tracking_uri)
+mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", cfg.mlflow.tracking_uri))
 
 model_uri = f"models:/{cfg.model.registry_name}@{cfg.model.alias}"
 model = mlflow.sklearn.load_model(model_uri)
