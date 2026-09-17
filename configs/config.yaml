@@ -1,0 +1,62 @@
+project:
+  name: telco-churn-mlops
+
+data:
+  source_url: https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv
+  raw_path: data/raw.csv
+  train_path: data/train.csv
+  test_path: data/test.csv
+  target: Churn
+  test_size: 0.2
+  seed: 42
+
+features:
+  numeric:
+    - tenure
+    - MonthlyCharges
+    - TotalCharges
+  categorical:
+    - gender
+    - SeniorCitizen
+    - Partner
+    - Dependents
+    - PhoneService
+    - MultipleLines
+    - InternetService
+    - OnlineSecurity
+    - OnlineBackup
+    - DeviceProtection
+    - TechSupport
+    - StreamingTV
+    - StreamingMovies
+    - Contract
+    - PaperlessBilling
+    - PaymentMethod
+
+model:
+  type: random_forest # logreg | random_forest
+  registry_name: TelcoChurnClassifier
+  alias: production
+
+training:
+  cv_folds: 5
+  scoring: roc_auc
+  param_grid:
+    logreg:
+      model__C: [0.1, 1.0, 10.0]
+      model__penalty: [l2]
+    random_forest:
+      model__n_estimators: [100, 200]
+      model__max_depth: [5, 10, null]
+
+mlflow:
+  tracking_uri: sqlite:///mlflow.db
+  experiment_name: telco-churn
+
+api:
+  host: 0.0.0.0
+  port: 8000
+
+app:
+  api_url: http://localhost:8000
+  port: 8501

@@ -1,0 +1,12 @@
+pandas
+numpy
+scikit-learn
+mlflow
+requests
+pyyaml
+matplotlib
+fastapi
+uvicorn[standard]
+streamlit
+pytest
+ruff

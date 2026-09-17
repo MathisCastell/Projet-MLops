@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+data/raw.csv
+data/train.csv
+data/test.csv
+mlruns/
+mlflow.db
+reports/
+.env
